@@ -1,4 +1,3 @@
-
 # Snakemake pipeline for variant calling
 
 rule trim:
@@ -36,7 +35,7 @@ rule bwa_mem:
   output:
     "results/sam/{sample}.aligned.sam"
   input:
-    ref   = "data/ecoli_rel606.fasta",
+    ref   = "data/ecoli_rel606.fasta", 
     read1 = "trimmed_fastq_small/{sample}_1.trim.sub.fastq",
     read2 = "trimmed_fastq_small/{sample}_2.trim.sub.fastq"
   shell:
@@ -68,3 +67,19 @@ rule mpileup:
     bam   = "results/bam/{sample}.aligned.sorted.bam"
   shell:
     "bcftools mpileup -O b -o {output} -f {input.fasta} {input.bam}"
+
+rule det_snv:
+  output:
+    "results/vcf/SRR2584863_variants.vcf"
+  input:
+    "results/bcf/SRR2584863_raw.bcf"
+  shell:
+    "bcftools call --ploidy 1 -m -v -o {output} {input}"
+    
+rule filter:
+  output:
+    "results/vcf/{sample}_final_variants.vcf"
+  input:
+    "results/vcf/{sample}_variants.vcf"
+  shell:
+    "vcfutils.pl varFilter {input} > {output}"
